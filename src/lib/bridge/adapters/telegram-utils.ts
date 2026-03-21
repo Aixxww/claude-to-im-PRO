@@ -11,7 +11,6 @@ import { setGlobalDispatcher, ProxyAgent } from 'undici';
 
 const TELEGRAM_API = 'https://api.telegram.org';
 
-// Export a function to set up global proxy - to be called after env vars are set
 export function setupGlobalProxy() {
   const proxyUrl = process.env.CTI_HTTPS_PROXY || process.env.CTI_HTTP_PROXY || process.env.HTTPS_PROXY || process.env.HTTP_PROXY;
   if (proxyUrl) {
@@ -29,24 +28,22 @@ export function setupGlobalProxy() {
   return false;
 }
 
-/** Use curl to make HTTPS requests with proxy support */
 async function fetchWithCurl(urlString: string, data?: string, headers?: Record<string, string>): Promise<Response> {
   const proxyUrl = process.env.CTI_HTTPS_PROXY || process.env.CTI_HTTP_PROXY || process.env.HTTPS_PROXY || process.env.HTTP_PROXY;
   const method = data ? 'POST' : 'GET';
 
-  console.log(`[fetchWithCurl] Using curl for ${urlString}, proxy=${proxyUrl || 'none'}`);
+  console.log(`[fetchWithCurl] Using curl for ${urlString}, proxy=${proxyUrl || 'none'}, method=${method}`);
 
-  let curlCmd = 'curl -s -w "\n%{http_code}" -o - --compressed';
+  let curlCmd = 'curl -s -w "\\n%{http_code}" -o - --compressed';
 
   if (proxyUrl) {
     curlCmd += ` -x "${proxyUrl}"`;
   }
 
   if (data) {
-    curlCmd += ` -X POST -H "Content-Type: application/json" -d '${data.replace(/'/g, "'\\''")}'`;
+    curlCmd += ` -X POST -H "Content-Type: application/json" -d '${data.replace(/'/g, "'\''")}'`;
   }
 
-  // Add headers
   if (headers) {
     for (const [key, value] of Object.entries(headers)) {
       if (key !== 'Content-Type') {
@@ -61,8 +58,7 @@ async function fetchWithCurl(urlString: string, data?: string, headers?: Record<
     import('child_process').then(({ exec }) => {
       exec(curlCmd, {
         encoding: 'utf-8',
-        // No timeout limit - let curl and the Telegram long-poll manage timeout
-        maxBuffer: 10 * 1024 * 1024, // 10MB buffer
+        maxBuffer: 10 * 1024 * 1024,
       }, (error, stdout, stderr) => {
         if (error) {
           console.error('[fetchWithCurl] Error:', error.message);
@@ -71,7 +67,6 @@ async function fetchWithCurl(urlString: string, data?: string, headers?: Record<
         }
 
         try {
-          // Split output: body + status code at the end (added by -w)
           const lastNewline = stdout.lastIndexOf('\n');
           if (lastNewline === -1) {
             throw new Error('Invalid curl response format');
@@ -81,7 +76,6 @@ async function fetchWithCurl(urlString: string, data?: string, headers?: Record<
           const statusCodeStr = stdout.slice(lastNewline + 1).trim();
           const status = parseInt(statusCodeStr) || 200;
 
-          // Return the response
           resolve(new Response(body, {
             status,
             statusText: 'OK',
@@ -96,16 +90,13 @@ async function fetchWithCurl(urlString: string, data?: string, headers?: Record<
   });
 }
 
-/** Simple wrapper that chooses between curl and fetch */
 async function fetchWithProxy(urlString: string, init: RequestInit = {}): Promise<Response> {
   const proxyUrl = process.env.CTI_HTTPS_PROXY || process.env.CTI_HTTP_PROXY || process.env.HTTPS_PROXY || process.env.HTTP_PROXY;
 
   if (!proxyUrl) {
-    // No proxy - undici fetch
     return fetch(urlString, init);
   }
 
-  // Use curl with proxy
   const data = init.body?.toString();
   const headers = init.headers as Record<string, string>;
   return fetchWithCurl(urlString, data, headers);
@@ -132,9 +123,6 @@ export interface TelegramApiResponse {
   };
 }
 
-/**
- * Call a Telegram Bot API method.
- */
 export async function callTelegramApi(
   botToken: string,
   method: string,
@@ -148,7 +136,7 @@ export async function callTelegramApi(
       body: JSON.stringify(params),
     });
     const httpStatus = res.status;
-    const data = (await res.json()) as TelegramApiResponse;
+    const data = await res.json() as TelegramApiResponse;
     if (!data.ok) {
       return {
         ok: false,
@@ -163,15 +151,10 @@ export async function callTelegramApi(
       httpStatus,
     };
   } catch (err) {
-    console.error(`[callTelegramApi] Error:`, err);
     return { ok: false, error: err instanceof Error ? err.message : 'Network error' };
   }
 }
 
-/**
- * Send a draft message preview via Telegram Bot API 9.5 sendMessageDraft.
- * Plain text only (no parse_mode) — used for streaming preview.
- */
 export async function sendMessageDraft(
   botToken: string,
   chatId: string,
@@ -186,9 +169,6 @@ export async function sendMessageDraft(
   });
 }
 
-/**
- * Escape special HTML characters for Telegram HTML mode.
- */
 export function escapeHtml(text: string): string {
   return text
     .replace(/&/g, '&amp;')
@@ -196,10 +176,6 @@ export function escapeHtml(text: string): string {
     .replace(/>/g, '&gt;');
 }
 
-/**
- * Split a message into chunks that fit within Telegram's message size limit.
- * Tries to split at line boundaries when possible.
- */
 export function splitMessage(text: string, maxLength: number): string[] {
   if (text.length <= maxLength) return [text];
 
@@ -224,9 +200,6 @@ export function splitMessage(text: string, maxLength: number): string[] {
   return chunks;
 }
 
-/**
- * Format a session header for notification messages.
- */
 export function formatSessionHeader(opts?: {
   sessionId?: string;
   sessionTitle?: string;
@@ -242,5 +215,4 @@ export function formatSessionHeader(opts?: {
   return parts.join('\n');
 }
 
-/** Export fetchWithProxy for use in adapter */
 export { fetchWithProxy };

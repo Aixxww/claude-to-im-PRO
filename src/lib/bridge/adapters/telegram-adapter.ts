@@ -16,7 +16,7 @@ import type {
 import type { FileAttachment } from '../types.js';
 import { BaseChannelAdapter, registerAdapterFactory } from '../channel-adapter.js';
 import { getBridgeContext } from '../context.js';
-import { callTelegramApi, sendMessageDraft } from './telegram-utils.js';
+import { callTelegramApi, sendMessageDraft, TelegramSendResult } from './telegram-utils.js';
 import {
   isImageEnabled,
   downloadPhoto,

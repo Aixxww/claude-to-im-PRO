@@ -4,16 +4,11 @@
  * Handles photo[] size selection, file download via Bot API, base64 conversion,
  * and document-type image validation. Produces FileAttachment objects that plug
  * directly into the existing streamClaude vision pipeline.
- *
- * NEW: Saves images to local disk for persistence (like official plugin).
  */
 
 import type { FileAttachment } from '../types.js';
 import { getBridgeContext } from '../context.js';
 import { fetchWithProxy } from './telegram-utils.js';
-import fs from 'node:fs/promises';
-import path from 'node:path';
-import os from 'node:os';
 
 const TELEGRAM_API = 'https://api.telegram.org';
 
@@ -74,30 +69,6 @@ export function isImageEnabled(): boolean {
   const setting = getBridgeContext().store.getSetting('bridge_telegram_image_enabled');
   // Default to true if not explicitly set to 'false'
   return setting !== 'false';
-}
-
-/**
- * Get the configured directory for saving incoming photos.
- *
- * Priority order:
- * 1. CTI_HOME environment variable + '/inbox'
- * 2. HOME + '/.claude-to-im/inbox'
- * 3. os.tmpdir() + '/claude-to-im-inbox'
- */
-export async function getImageSaveDir(): Promise<string> {
-  const configuredDir = getBridgeContext().store.getSetting('bridge_telegram_image_save_dir');
-
-  if (configuredDir) {
-    // Use configured directory
-    await fs.mkdir(configuredDir, { recursive: true });
-    return configuredDir;
-  }
-
-  // Default: use CTI_HOME or fallback directories
-  const ctiHome = process.env.CTI_HOME || path.join(os.homedir(), '.claude-to-im');
-  const defaultDir = path.join(ctiHome, 'inbox');
-  await fs.mkdir(defaultDir, { recursive: true });
-  return defaultDir;
 }
 
 /**
@@ -217,10 +188,8 @@ export async function downloadDocumentImage(
 
 /**
  * Download a file by its Telegram file_id.
- * Calls getFile → download URL → save to disk + base64 FileAttachment.
+ * Calls getFile → download URL → binary → base64 FileAttachment.
  * Retries up to MAX_RETRIES with exponential backoff.
- *
- * NEW: Saves images to local disk (like official plugin) for persistence.
  */
 async function downloadFileById(
   botToken: string,
@@ -228,7 +197,6 @@ async function downloadFileById(
   messageId: string,
 ): Promise<MediaDownloadResult> {
   const maxSize = getMaxImageSize();
-  const saveDir = await getImageSaveDir();
 
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
@@ -262,7 +230,7 @@ async function downloadFileById(
 
       // Step 2: Download the file
       const downloadUrl = `${TELEGRAM_API}/file/bot${botToken}/${filePath}`;
-      const downloadRes = await fetchWithProxy(downloadUrl, {
+      const downloadRes = await fetchWithProxy(downloadUrl as string, {
         signal: AbortSignal.timeout(60_000),
       });
 
@@ -291,18 +259,10 @@ async function downloadFileById(
 
       // Step 4: Determine MIME type
       const mime = inferMimeType(filePath) || 'image/jpeg';
-      const ext = mime.split('/')[1] || 'jpg';
-      const fileName = filePath.split('/').pop() || `image_${messageId}`;
 
-      // Step 5: Save to local disk (new feature - like official plugin)
-      const timestamp = Date.now();
-      const localFileName = `tg_${messageId}_${timestamp}.${ext}`;
-      const localPath = path.join(saveDir, localFileName);
-      await fs.writeFile(localPath, buffer);
-      console.log(`[telegram-media] Saved image to: ${localPath}`);
-
-      // Step 6: Convert to base64 and build FileAttachment
+      // Step 5: Convert to base64 and build FileAttachment
       const base64 = buffer.toString('base64');
+      const fileName = filePath.split('/').pop() || `image_${messageId}`;
 
       return {
         attachment: {
@@ -311,8 +271,6 @@ async function downloadFileById(
           type: mime,
           size: buffer.length,
           data: base64,
-          // Add local path for persistence (new field)
-          localPath,
         },
       };
     } catch (err) {
