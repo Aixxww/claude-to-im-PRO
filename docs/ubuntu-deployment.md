@@ -122,7 +122,7 @@ Claude-to-IM Pro is a library. Create a host application to run it:
 ```bash
 cat > /opt/claude-to-im/host.js << 'EOF'
 import { initBridgeContext, bridgeManager } from 'claude-to-im-pro/lib/bridge/index.js';
-import { JsonFileStore } from 'claude-to-im-pro/lib/bridge/examples/mock-host.js';
+import { JsonFileStore } from 'claude-to-im-pro/lib/bridge/stores/json-file-store.js';
 import { ClaudeCodeAgent } from '@anthropic-ai/claude-agent-sdk';
 import fs from 'fs';
 import path from 'path';

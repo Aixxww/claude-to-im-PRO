@@ -145,13 +145,12 @@ npm install claude-to-im-pro
 
 ```typescript
 import { initBridgeContext, bridgeManager } from 'claude-to-im-pro/lib/bridge/index.js';
-import { JsonFileStore } from 'claude-to-im-pro/lib/bridge/host.js';
-import { SDKLLMProvider } from '@anthropic-ai/claude-agent-sdk';
+import { JsonFileStore } from 'claude-to-im-pro/lib/bridge/stores/json-file-store.js';
 
 // Initialize bridge context
 // 初始化桥接上下文
-const store = new JsonFileStore('./data');
-const llm = new SDKLLMProvider();
+const store = new JsonFileStore('./data/bridge-store.json');
+const llm = new SDKLLMProvider(); // Your LLM provider implementation
 
 initBridgeContext({
   store,
