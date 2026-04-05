@@ -1,6 +1,6 @@
 {
   "name": "claude-to-im-pro",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Enhanced Claude-to-IM with official Telegram Plugin features integrated: message editing, emoji reactions, and local photo storage",
   "type": "module",
   "main": "dist/lib/bridge/context.js",
@@ -14,17 +14,17 @@
       "types": "./dist/lib/bridge/*.d.ts",
       "import": "./dist/lib/bridge/*.js"
     },
-    "./src/lib/bridge/adapters/*.js": {
-      "types": "./dist/lib/bridge/adapters/*.d.ts",
-      "import": "./dist/lib/bridge/adapters/*.js"
+    "./src/lib/bridge/**/*.js": {
+      "types": "./dist/lib/bridge/**/*.d.ts",
+      "import": "./dist/lib/bridge/**/*.js"
     },
-    "./src/lib/bridge/markdown/*.js": {
-      "types": "./dist/lib/bridge/markdown/*.d.ts",
-      "import": "./dist/lib/bridge/markdown/*.js"
+    "./lib/bridge/*.js": {
+      "types": "./dist/lib/bridge/*.d.ts",
+      "import": "./dist/lib/bridge/*.js"
     },
-    "./src/lib/bridge/security/*.js": {
-      "types": "./dist/lib/bridge/security/*.d.ts",
-      "import": "./dist/lib/bridge/security/*.js"
+    "./lib/bridge/**/*.js": {
+      "types": "./dist/lib/bridge/**/*.d.ts",
+      "import": "./dist/lib/bridge/**/*.js"
     }
   },
   "files": [
