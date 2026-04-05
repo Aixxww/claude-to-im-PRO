@@ -4,9 +4,54 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node version](https://img.shields.io/node/%3E%3D20-brightgreen.svg)](https://nodejs.org)
 
-> Bridge connecting Claude Code SDK to IM platforms with enhanced Telegram features
+> **通过 Telegram/Discord/飞书 远程使用 Claude Code**
 >
-> 连接 Claude Code SDK 与 IM 平台的桥接库，集成了增强的 Telegram 功能
+> Connect Claude Code SDK to IM platforms with enhanced Telegram features
+
+## 这是什么？/ What is this?
+
+**中文：**
+
+Claude-to-IM Pro 让你可以通过手机上的 Telegram、Discord、飞书等 IM 应用与 Claude Code 进行对话。
+
+- 📱 **远程访问**：不在电脑前也能让 Claude 帮你写代码、分析文件
+- 🔐 **权限审批**：Claude 执行敏感操作时，手机上实时收到审批请求
+- ⚡ **流式预览**：实时看到 Claude 的响应进度
+- 🌐 **代理支持**：完整的代理支持，国内用户无障碍使用
+
+**English:**
+
+Claude-to-IM Pro enables you to interact with Claude Code through mobile messaging apps like Telegram, Discord, and Feishu/Lark.
+
+- 📱 **Remote Access**: Let Claude write code and analyze files even when away from your computer
+- 🔐 **Permission Approval**: Receive real-time approval requests on your phone when Claude needs to execute sensitive operations
+- ⚡ **Streaming Preview**: See Claude's response progress in real-time
+- 🌐 **Proxy Support**: Full proxy support for users in China
+
+## 快速理解 / Quick Understanding
+
+```
+┌──────────────┐         ┌──────────────┐         ┌──────────────┐
+│   手机 App   │ ◄─────► │ Claude-to-IM │ ◄─────► │  Claude Code │
+│ (Telegram等) │         │     Pro      │         │     SDK      │
+└──────────────┘         └──────────────┘         └──────────────┘
+       │                        │                        │
+       │                        │                        │
+       ▼                        ▼                        ▼
+  发送消息                 转换格式                   执行任务
+  接收结果                 路由分发                   生成响应
+  审批权限                 权限代理                   流式输出
+```
+
+**工作流程 / How it works:**
+
+1. 你在 Telegram 发送: "帮我看看 package.json 的依赖" (Send message via Telegram)
+2. Claude-to-IM 转发给 Claude Code (Forward to Claude Code SDK)
+3. Claude 执行: 读取文件、分析依赖 (Claude executes: read file, analyze dependencies)
+4. 如需权限: 手机弹窗让你审批 (If permission needed: approval popup on phone)
+5. 结果返回: Telegram 显示分析结果 (Result: shown in Telegram)
+
+详细原理请参阅 [**工作原理详解**](docs/HOW_IT_WORKS.md)。
 
 ## ✨ Features / 特性
 
@@ -269,6 +314,15 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 - [op7418/claude-to-im](https://github.com/op7418/claude-to-im) - Original bridge implementation
 - [anthropics/claude-plugins](https://github.com/anthropics/claude-plugins-official) - Official Telegram plugin reference
+
+## 📖 Documentation / 文档
+
+| 文档 | 说明 |
+|------|------|
+| [工作原理详解](docs/HOW_IT_WORKS.md) | 项目目标、架构、消息流转详解 |
+| [开发指南](docs/development.md) | 集成接口、SSE 格式、适配器开发 |
+| [Ubuntu 部署](docs/ubuntu-deployment.md) | 生产环境部署、systemd 配置 |
+| [架构详解](src/lib/bridge/ARCHITECTURE.md) | 模块依赖、设计决策 |
 
 ## 🔗 Links / 链接
 
